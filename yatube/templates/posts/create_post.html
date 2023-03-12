@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load user_filters %}
+{% block title %}
+{% if form.initial %}Редактировать запись.{% else %}Добавить запись.{% endif %}
+{% endblock title %}
+{% block content %}
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8 p-5">
+        <div class="card">
+          <div class="card-header">
+            {% if form.initial %}Редактировать запись{% else %}Новая запись{% endif %}
+          </div>
+          <div class="card-body">
+            <form method="post" 
+              action="
+                {% if form.initial %}
+                  {% url 'posts:post_edit' form.instance.id %}
+                {% else %}
+                  {% url 'posts:post_create' %} 
+                {% endif %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% for field in form %}
+                  <div class="form-group row my-3 p-3">
+                    {{ field.errors|escape }}
+                    <label for="{{ field.id_for_label }}" title="{{ field.help_text|safe }}">
+                      {{ field.label }}
+                    </label>
+                    {{ field|addclass:'form-control' }}
+                  </div>
+                {% endfor %}
+                <div class="d-flex justify-content-end">
+                  <button type="submit" class="btn btn-primary">
+                    {% if form.initial %}Сохранить{% else %}Добавить{% endif %} 
+                  </button>
+                </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
