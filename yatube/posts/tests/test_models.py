@@ -1,26 +1,42 @@
 from django.test import TestCase
 
-from posts.models import Post, Group, User
+from posts.models import Comment, Follow, Group, Post, User
+
+USERMANE = 'test_user'
+AUTHOR = 'test_atuhor'
 
 
 class PostModelTest(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+        cls.user = User.objects.create(username=USERMANE)
+        cls.author = User.objects.create(username=AUTHOR)
         cls.post = Post.objects.create(
             text='Test text. Field-text.',
-            author=User.objects.create(username='test_user'),
+            author=cls.author,
         )
         cls.group = Group.objects.create(
             title='Title text test for group.',
             slug='test_slug',
             description='Description text test for group.'
         )
+        cls.comment = Comment.objects.create(
+            post=cls.post,
+            author=cls.user,
+            text='Text test comment'
+        )
+        cls.follow = Follow.objects.create(
+            user=cls.user,
+            author=cls.author
+        )
 
     def test_models_have_correct_object_names(self):
         list_class = {
             self.post: self.post.text[:15],
             self.group: self.group.title,
+            self.comment: self.comment.text[:15],
+            self.follow: f'{self.user} подписан на {self.author}',
         }
         for key_class_test, str_class_value in list_class.items():
             with self.subTest(type(key_class_test).__name__):

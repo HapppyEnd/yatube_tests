@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load user_filters %}
 {% block title %}
-{% if form.initial %}Редактировать запись.{% else %}Добавить запись.{% endif %}
+  {% if form.initial %}Редактировать запись.{% else %}Добавить запись.{% endif %}
 {% endblock title %}
 {% block content %}
   <div class="container py-5">
@@ -12,8 +12,21 @@
             {% if form.initial %}Редактировать запись{% else %}Новая запись{% endif %}
           </div>
           <div class="card-body">
-            <form method="post" 
-              action="
+            {% if form.errors %}
+              {% for field in form %}
+                {% for error in field.errors %}
+                  <div class="alert alert-danger">
+                    {{ error|escape }}
+                  </div>
+                {% endfor %}
+              {% endfor %}
+              {% for error in form.non_field_errors %}
+                <div class="alert alert-danger">
+                  {{ error|escape }}
+                </div>
+              {% endfor %}
+            {% endif %}
+            <form method="post" action="
                 {% if form.initial %}
                   {% url 'posts:post_edit' form.instance.id %}
                 {% else %}
@@ -22,7 +35,6 @@
                 {% csrf_token %}
                 {% for field in form %}
                   <div class="form-group row my-3 p-3">
-                    {{ field.errors|escape }}
                     <label for="{{ field.id_for_label }}" title="{{ field.help_text|safe }}">
                       {{ field.label }}
                     </label>

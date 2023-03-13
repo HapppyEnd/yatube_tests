@@ -72,6 +72,9 @@ class Comment(models.Model):
         'Добавить комментарий:', help_text='Введите текст.')
     created = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self) -> str:
+        return self.text[:15]
+
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
@@ -90,5 +93,12 @@ class Follow(models.Model):
         related_name='following'
     )
 
+    def __str__(self) -> str:
+        return f'{self.user} подписан на {self.author}'
+
     class Meta:
-        unique_together = ['user', 'author']
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        # unique_together = ['user', 'author']
+        models.UniqueConstraint(
+            fields=['user', 'author'], name='unique_follow')
