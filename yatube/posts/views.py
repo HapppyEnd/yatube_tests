@@ -4,9 +4,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import CommentForm, PostForm
 from .models import Follow, Group, Post, User
+from yatube.settings import POSTS_PER_PAGE
 
 
-def page_objects(request, post, post_per_page=10):
+def page_objects(request, post, post_per_page=POSTS_PER_PAGE):
     return Paginator(post, post_per_page).get_page(request.GET.get('page'))
 
 
@@ -34,7 +35,7 @@ def profile(request, username):
         'author': author,
         'following': (request.user.is_authenticated
                       and request.user.username != username
-                      and author.following.exists())
+                      and author.following.filter(user=request.user).exists())
     })
 
 
@@ -109,8 +110,6 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    if username != request.user.username:
-        get_object_or_404(
-            Follow, user=request.user, author=get_object_or_404(
-                User, username=username)).delete()
+    get_object_or_404(
+        Follow, user=request.user, author__username=username).delete()
     return redirect('posts:profile', username)

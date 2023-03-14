@@ -10,8 +10,8 @@
     {% cache 20 follow_page %}
       {% for post in page_obj %}
         {% include "posts/includes/post_card.html" %}
-        {% empty %} У Вас нет активных подписок.
         {% if not forloop.last %}<hr />{% endif %}
+      {% empty %} У Вас нет активных подписок.
       {% endfor %}
     {% endcache %}
     {% include "includes/paginator.html" %}

@@ -21,7 +21,7 @@
       {% endif %}
     {% endif %}
     {% for post in page_obj %}
-      {% include 'posts/includes/post_card.html' with not_author=True %}
+      {% include 'posts/includes/post_card.html' with profile=True %}
       {% if not forloop.last %}<hr/>{% endif %}
     {% endfor %}
     {% include "includes/paginator.html" %}

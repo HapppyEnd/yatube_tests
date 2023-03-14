@@ -7,9 +7,10 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from posts.models import Comment, Group, Post, User
-from posts.urls import app_name
+from yatube.settings import MEDIA_POST_URL
 
 USERNAME = 'test_user'
+ANOTHER = 'test_another'
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -32,6 +33,7 @@ class PostFormTest(TestCase):
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.user = User.objects.create(username=USERNAME)
+        cls.another_user = User.objects.create(username=ANOTHER)
         cls.group = Group.objects.create(
             title='title group',
             slug='test_slug',
@@ -54,6 +56,7 @@ class PostFormTest(TestCase):
         )
         cls.guest = Client()
         cls.client = Client()
+        cls.another = Client()
         cls.POST_EDIT_URL = reverse('posts:post_edit', args=[cls.post.id])
         cls.POST_DETAIL_URL = reverse('posts:post_detail', args=[cls.post.id])
         cls.CREATE_COMMENT_URL = reverse(
@@ -66,6 +69,7 @@ class PostFormTest(TestCase):
 
     def setUp(self) -> None:
         self.client.force_login(self.user)
+        self.another.force_login(self.another_user)
 
     def test_create_post(self) -> None:
         Post.objects.all().delete()
@@ -76,12 +80,13 @@ class PostFormTest(TestCase):
         }
         response = self.client.post(
             CREATE_POST_URL, data=form_data, follow=True)
+        self.assertEqual(Post.objects.count(), 1)
         post = Post.objects.get()
         self.assertEqual(post.author, self.user)
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.group.id, form_data['group'])
         self.assertEqual(
-            post.image.name, f"{app_name}/{form_data['image'].name}")
+            post.image.name, f"{MEDIA_POST_URL}{form_data['image'].name}")
         self.assertRedirects(response, PROFILE_URL)
 
     def test_edit_post(self) -> None:
@@ -103,15 +108,17 @@ class PostFormTest(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.group.id, form_data['group'])
         self.assertEqual(
-            post.image.name, f"{app_name}/{form_data['image'].name}")
+            post.image.name, f"{MEDIA_POST_URL}{form_data['image'].name}")
         self.assertRedirects(response, self.POST_DETAIL_URL)
 
     def test_add_comment(self):
+        Comment.objects.all().delete()
         form_data = {
             'text': 'Test comment',
         }
         response = self.client.post(
             self.CREATE_COMMENT_URL, data=form_data, follow=True)
+        self.assertEqual(Comment.objects.count(), 1)
         comment = Comment.objects.get()
         self.assertEqual(comment.author, self.user)
         self.assertEqual(comment.text, form_data['text'])
@@ -121,19 +128,29 @@ class PostFormTest(TestCase):
     def test_guest_create_post_and_comment(self):
         Post.objects.all().delete()
         Comment.objects.all().delete()
-        form_data = {
+        form_post = {
+            'text': 'Test text guest create',
+            'group': self.group,
+            'image': self.uploaded
+        }
+        form_comment = {
             'text': 'Test text guest create',
         }
         GUEST_CREATE_URL = [
-            [CREATE_POST_URL, Post.objects.count()],
-            [self.CREATE_COMMENT_URL, Comment.objects.count()]
+            [CREATE_POST_URL, Post.objects.count(), form_post],
+            [self.CREATE_COMMENT_URL, Comment.objects.count(), form_comment]
         ]
-        for url, count in GUEST_CREATE_URL:
+        for url, count, data in GUEST_CREATE_URL:
             with self.subTest(url):
-                self.guest.post(CREATE_POST_URL, data=form_data, follow=True)
+                self.guest.post(
+                    CREATE_POST_URL, data=data, follow=True)
                 self.assertEqual(count, 0)
 
-    def test_guest_edit_post(self):
+    def test_guest_and_another_edit_post(self):
+        CLIENTS = [
+            self.guest,
+            self.another,
+        ]
         post_count = Post.objects.count()
         form_data = {
             'text': 'Test text edit',
@@ -144,11 +161,9 @@ class PostFormTest(TestCase):
                 content_type='image/gif'
             )
         }
-        self.guest.post(self.POST_EDIT_URL, data=form_data, follow=True)
-        self.assertEqual(Post.objects.count(), post_count)
-        post = Post.objects.get(id=self.post.id)
-        self.assertEqual(post.author, self.post.author)
-        self.assertNotEqual(post.text, form_data['text'])
-        self.assertNotEqual(post.group.id, form_data['group'])
-        self.assertNotEqual(
-            post.image.name, f"{app_name}/{form_data['image'].name}")
+        for client in CLIENTS:
+            with self.subTest(client):
+                client.post(self.POST_EDIT_URL, data=form_data, follow=True)
+                self.assertEqual(Post.objects.count(), post_count)
+                post = Post.objects.get(id=self.post.id)
+                self.assertEqual(post.author, self.post.author)

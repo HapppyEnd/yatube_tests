@@ -1,6 +1,6 @@
 from django.test import TestCase
-
-from posts.models import Comment, Follow, Group, Post, User
+from posts.models import (FOLLOW_STR, LENGTH_TEXT, Comment, Follow, Group,
+                          Post, User)
 
 USERMANE = 'test_user'
 AUTHOR = 'test_atuhor'
@@ -33,10 +33,12 @@ class PostModelTest(TestCase):
 
     def test_models_have_correct_object_names(self):
         list_class = {
-            self.post: self.post.text[:15],
+            self.post: self.post.text[:LENGTH_TEXT],
             self.group: self.group.title,
-            self.comment: self.comment.text[:15],
-            self.follow: f'{self.user} подписан на {self.author}',
+            self.comment: self.comment.text[:LENGTH_TEXT],
+            self.follow: FOLLOW_STR.format(
+                self.follow.user.get_username(),
+                self.follow.author.get_username()),
         }
         for key_class_test, str_class_value in list_class.items():
             with self.subTest(type(key_class_test).__name__):

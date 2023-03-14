@@ -98,11 +98,13 @@ class PostViewsTest(TestCase):
         ]
         for url, client, context_name_obj in CASES:
             with self.subTest(url):
+                response = client.get(url)
                 if context_name_obj == 'page_obj':
-                    posts = client.get(url).context['page_obj']
+                    posts = response.context['page_obj']
+                    self.assertEqual(len(posts), 1)
                     post = posts[0]
                 else:
-                    post = client.get(url).context['post']
+                    post = response.context['post']
                 self.assertEqual(post.id, self.post.id)
                 self.assertEqual(post.author, self.post.author)
                 self.assertEqual(post.text, self.post.text)
@@ -132,8 +134,7 @@ class PostViewsTest(TestCase):
 
     def test_correct_paginator_each_page(self):
         Post.objects.all().delete()
-        cache.clear()
-        self.posts_p = Post.objects.bulk_create(
+        Post.objects.bulk_create(
             Post(
                 text=f'Test text post {i}',
                 author=self.user,
@@ -174,8 +175,6 @@ class PostViewsTest(TestCase):
 
     def test_unfollow(self):
         Follow.objects.create(user=self.user, author=self.author_user)
-        self.assertTrue(Follow.objects.filter(
-            user=self.user, author=self.author_user).exists())
         self.another.get(UNFOLLOW_URL)
         self.assertFalse(Follow.objects.filter(
             user=self.user, author=self.author_user).exists())

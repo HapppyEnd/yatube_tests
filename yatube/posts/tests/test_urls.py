@@ -13,9 +13,7 @@ CREATE_POST_URL = reverse('posts:post_create')
 LOGIN_URL = reverse('users:login')
 PROFILE_FOLLOW_URL = reverse('posts:follow_index')
 FOLLOW_URL = reverse('posts:profile_follow', args=[USERNAME])
-FOLLOW_UNEXIST_AUTH_URL = reverse('posts:profile_follow', args=['unexsist'])
 UNFOLLOW_URL = reverse('posts:profile_unfollow', args=[USERNAME])
-UNFOLLOW_UNEXIST_AUTH_URL = reverse('posts:profile_follow', args=['unexsist'])
 REDIRECT_CREATE_POST_URL = f'{LOGIN_URL}?next={CREATE_POST_URL}'
 PAGE_NOT_FOUND_URL = f'{INDEX_URL}unexsisting_page/'
 REDIRECT_PROFILE_FOLLOW_URL = f'{LOGIN_URL}?next={PROFILE_FOLLOW_URL}'
@@ -45,7 +43,7 @@ class PostURLTest(TestCase):
 
         cls.guest = Client()
         cls.author = Client()
-        cls.author.force_login(cls.user)
+        cls.author.force_login(user=cls.user)
         cls.another = Client()
         cls.another.force_login(cls.user_not_author)
 
@@ -77,13 +75,15 @@ class PostURLTest(TestCase):
             [PAGE_NOT_FOUND_URL, self.guest, 404],
             [PROFILE_FOLLOW_URL, self.guest, 302],
             [PROFILE_FOLLOW_URL, self.another, 200],
+            [FOLLOW_URL, self.guest, 302],
             [FOLLOW_URL, self.another, 302],
-            [FOLLOW_UNEXIST_AUTH_URL, self.another, 404],
+            [FOLLOW_URL, self.author, 302],
+            [UNFOLLOW_URL, self.guest, 302],
             [UNFOLLOW_URL, self.another, 302],
-            [UNFOLLOW_UNEXIST_AUTH_URL, self.another, 404],
+            [UNFOLLOW_URL, self.author, 404],
         ]
         for url, client, status in CASES:
-            with self.subTest(url=url, status=status):
+            with self.subTest(url=url, status=status, client=client):
                 self.assertEqual(
                     client.get(url).status_code, status)
 
@@ -95,9 +95,10 @@ class PostURLTest(TestCase):
             [PROFILE_FOLLOW_URL, self.guest, REDIRECT_PROFILE_FOLLOW_URL],
             [FOLLOW_URL, self.guest, REDIRECT_FOLLOW_URL],
             [FOLLOW_URL, self.another, PROFILE_URL],
+            [FOLLOW_URL, self.author, PROFILE_URL],
             [UNFOLLOW_URL, self.guest, REDIRECT_UNFOLLOW_URL],
             [UNFOLLOW_URL, self.another, PROFILE_URL],
         ]
         for url, client, redirect_url in CASES:
-            with self.subTest(url=url, redirect=redirect_url):
+            with self.subTest(url=url, redirect=redirect_url, client=client):
                 self.assertRedirects(client.get(url), redirect_url)
