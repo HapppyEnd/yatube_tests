@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from yatube.settings import MEDIA_POST_PATH
+
 User = get_user_model()
 
 LENGTH_TEXT = 15
@@ -18,12 +20,12 @@ class Group(models.Model):
     description = models.TextField(
         verbose_name='Описание')
 
-    def __str__(self):
-        return self.title
-
     class Meta:
         verbose_name = 'Группа'
         verbose_name_plural = 'Группы'
+
+    def __str__(self):
+        return self.title
 
 
 class Post(models.Model):
@@ -49,18 +51,18 @@ class Post(models.Model):
     )
     image = models.ImageField(
         'Изображение',
-        upload_to='posts/',
+        upload_to=MEDIA_POST_PATH,
         blank=True
     )
-
-    def __str__(self) -> str:
-        return self.text[:LENGTH_TEXT]
 
     class Meta:
         verbose_name = 'Запись'
         verbose_name_plural = 'Записи'
 
         ordering = ('-pub_date', )
+
+    def __str__(self) -> str:
+        return self.text[:LENGTH_TEXT]
 
 
 class Comment(models.Model):
@@ -79,13 +81,14 @@ class Comment(models.Model):
     created = models.DateTimeField(
         auto_now_add=True, verbose_name='Дата добавления')
 
-    def __str__(self) -> str:
-        return self.text[:LENGTH_TEXT]
-
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
         default_related_name = 'comments'
+        ordering = ('-created', )
+
+    def __str__(self) -> str:
+        return self.text[:LENGTH_TEXT]
 
 
 class Follow(models.Model):
@@ -102,6 +105,15 @@ class Follow(models.Model):
         verbose_name='Автор'
     )
 
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'author'),
+                name='follow_user_author_constraint'),
+        )
+
     def __str__(self) -> str:
         return FOLLOW_STR.format(
             self.user.get_username(), self.author.get_username())
@@ -109,12 +121,3 @@ class Follow(models.Model):
     def clean(self):
         if self.user == self.author:
             raise ValidationError('Нельзя подписаться на себя.')
-
-    class Meta:
-        verbose_name = 'Подписчик'
-        verbose_name_plural = 'Подписчики'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('user', 'author'),
-                name='follow_user_author_constraint'),
-        )

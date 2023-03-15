@@ -118,7 +118,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_POST_URL = 'posts/'
+MEDIA_POST_PATH = 'posts/'
 
 # Constants
 POSTS_PER_PAGE = 10

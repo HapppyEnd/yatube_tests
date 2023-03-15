@@ -35,7 +35,8 @@ def profile(request, username):
         'author': author,
         'following': (request.user.is_authenticated
                       and request.user.username != username
-                      and author.following.filter(user=request.user).exists())
+                      and author.following.filter(author=author,
+                                                  user=request.user).exists())
     })
 
 

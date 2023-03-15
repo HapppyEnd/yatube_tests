@@ -7,7 +7,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from posts.models import Comment, Group, Post, User
-from yatube.settings import MEDIA_POST_URL
+from yatube.settings import MEDIA_POST_PATH
 
 USERNAME = 'test_user'
 ANOTHER = 'test_another'
@@ -55,8 +55,10 @@ class PostFormTest(TestCase):
             group=cls.group,
         )
         cls.guest = Client()
-        cls.client = Client()
+        cls.author = Client()
+        cls.author.force_login(cls.user)
         cls.another = Client()
+        cls.another.force_login(cls.another_user)
         cls.POST_EDIT_URL = reverse('posts:post_edit', args=[cls.post.id])
         cls.POST_DETAIL_URL = reverse('posts:post_detail', args=[cls.post.id])
         cls.CREATE_COMMENT_URL = reverse(
@@ -67,10 +69,6 @@ class PostFormTest(TestCase):
         super().tearDownClass()
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
-    def setUp(self) -> None:
-        self.client.force_login(self.user)
-        self.another.force_login(self.another_user)
-
     def test_create_post(self) -> None:
         Post.objects.all().delete()
         form_data = {
@@ -78,7 +76,7 @@ class PostFormTest(TestCase):
             'group': self.post.group.id,
             'image': self.uploaded,
         }
-        response = self.client.post(
+        response = self.author.post(
             CREATE_POST_URL, data=form_data, follow=True)
         self.assertEqual(Post.objects.count(), 1)
         post = Post.objects.get()
@@ -86,7 +84,7 @@ class PostFormTest(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.group.id, form_data['group'])
         self.assertEqual(
-            post.image.name, f"{MEDIA_POST_URL}{form_data['image'].name}")
+            post.image.name, f"{MEDIA_POST_PATH}{form_data['image'].name}")
         self.assertRedirects(response, PROFILE_URL)
 
     def test_edit_post(self) -> None:
@@ -100,7 +98,7 @@ class PostFormTest(TestCase):
                 content_type='image/gif'
             )
         }
-        response = self.client.post(
+        response = self.author.post(
             self.POST_EDIT_URL, data=form_data, follow=True)
         self.assertEqual(Post.objects.count(), post_count)
         post = Post.objects.get(id=self.post.id)
@@ -108,7 +106,7 @@ class PostFormTest(TestCase):
         self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.group.id, form_data['group'])
         self.assertEqual(
-            post.image.name, f"{MEDIA_POST_URL}{form_data['image'].name}")
+            post.image.name, f"{MEDIA_POST_PATH}{form_data['image'].name}")
         self.assertRedirects(response, self.POST_DETAIL_URL)
 
     def test_add_comment(self):
@@ -116,7 +114,7 @@ class PostFormTest(TestCase):
         form_data = {
             'text': 'Test comment',
         }
-        response = self.client.post(
+        response = self.author.post(
             self.CREATE_COMMENT_URL, data=form_data, follow=True)
         self.assertEqual(Comment.objects.count(), 1)
         comment = Comment.objects.get()
@@ -167,3 +165,7 @@ class PostFormTest(TestCase):
                 self.assertEqual(Post.objects.count(), post_count)
                 post = Post.objects.get(id=self.post.id)
                 self.assertEqual(post.author, self.post.author)
+                self.assertEqual(post.text, self.post.text)
+                self.assertEqual(post.group.id, self.group.id)
+                self.assertEqual(
+                    post.image.name, self.post.image.name)
