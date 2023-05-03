@@ -1,19 +1,17 @@
 {% extends "base.html" %}
 {% block title %}
-  Избранные авторы.
+  Избранные авторы
 {% endblock title %}
 {% block content %}
-  <div class="container py-5">
-    <h1>Избранные авторы.</h1>
-    {% include 'posts/includes/switcher.html' with follow=True %}
-    {% load cache %}
-    {% cache 20 follow_page %}
-      {% for post in page_obj %}
-        {% include "posts/includes/post_card.html" %}
-        {% if not forloop.last %}<hr />{% endif %}
-      {% empty %} У Вас нет активных подписок.
-      {% endfor %}
-    {% endcache %}
-    {% include "includes/paginator.html" %}
-  </div>
+  <h1>Избранные авторы.</h1>
+  {% include 'posts/includes/switcher.html' with follow=True %}
+  {% load cache %}
+  {% cache 20 follow_page %}
+  {% for post in page_obj %}
+    {% include "posts/includes/post_text.html" %}
+    {% empty %} Вы еще ни на кого не подписались.
+    {% if not forloop.last %}<hr/>{% endif %}
+  {% endfor %}
+  {% endcache %}
+  {% include 'includes/paginator.html' %}
 {% endblock content %}

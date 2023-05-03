@@ -1,11 +1,20 @@
 import os
 
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Искать шаблоны на уровне проекта
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+# указываем директорию, в которую будут складываться файлы писем
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+
+LOGIN_URL = 'users:login'
+LOGIN_REDIRECT_URL = 'posts:index'
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'bt+3bkuv!*o8p*puqqi4t--g1z&5wqr&5(^x)udpw@f%6jwd9!'
+SECRET_KEY = '@=zd9b8*cv6a2+3@9_op0n)-5&+=)jde2$(c)@ats4!==6d^$f'
 
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = [
@@ -15,8 +24,9 @@ ALLOWED_HOSTS = [
     'testserver',
 ]
 
-
-# Application definition
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -25,7 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # my apps.
+    #  register my app
     'posts.apps.PostsConfig',
     'users.apps.UsersConfig',
     'core.apps.CoreConfig',
@@ -48,7 +58,7 @@ ROOT_URLCONF = 'yatube.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [TEMPLATES_DIR],  # Искать шаблоны на уровне проекта
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -56,6 +66,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                #  Добавлен контекст-процессор
                 'core.context_processors.year.year',
             ],
         },
@@ -64,10 +75,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'yatube.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -75,30 +82,35 @@ DATABASES = {
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.'
+        'UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
 
 # Internationalization
-# https://docs.djangoproject.com/en/2.2/topics/i18n/
-
-LANGUAGE_CODE = 'ru-RU'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
 
@@ -108,31 +120,14 @@ USE_L10N = True
 
 USE_TZ = True
 
-CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
+#  Константы мои
+POST_PER_PAGE = 10
+MAX_LENGHT_STR = 15
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
-
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_POST_PATH = 'posts/'
-
-# Constants
-POSTS_PER_PAGE = 10
-
-LOGIN_URL = 'users:login'
-LOGIN_REDIRECT_URL = 'posts:index'
-# LOGOUT_REDIRECT_URL = 'posts:index'
-
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-# указываем директорию, в которую будут складываться файлы писем
-EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    }
-}

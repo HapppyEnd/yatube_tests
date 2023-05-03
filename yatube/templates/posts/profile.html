@@ -1,29 +1,32 @@
 {% extends "base.html" %}
 {% block title %}
-  Профиль пользователя {{ author.get_full_name }} {{ author.username }}
+Профайл пользователя {{ author.get_full_name }}
 {% endblock title %}
 {% block content %}
-  <div class="container py-5">
-    <h1>Профиль пользователя {{ author.get_full_name }} {{ author.username }}</h1>
-    <h4>Всего записей: {{ author.posts.count }}</h4>
-    <h6>Всего подписок: {{ author.follower.count }}</h6>
-    <h6>Всего подписчиков: {{ author.following.count }}</h6>
-    <h6>Комментариев: {{ author.comments.count }}</h6> 
-    {% if user != author and not user.is_anonymous %}
-      {% if following %}
-        <a class="btn btn-lg btn-light" href="
-          {% url 'posts:profile_unfollow' author.username %}" role="button">
-          Отписаться</a>
-      {% else %}
-        <a class="btn btn-lg btn-primary" href="
-          {% url 'posts:profile_follow' author.username %}" role="button">
-          Подписаться</a>
-      {% endif %}
-    {% endif %}
-    {% for post in page_obj %}
-      {% include 'posts/includes/post_card.html' with author_hidden=True %}
-      {% if not forloop.last %}<hr/>{% endif %}
-    {% endfor %}
-    {% include "includes/paginator.html" %}
-  </div>
+<div class="mb-5">
+  <h1>Все посты пользователя  
+    {% if author.get_full_name %}{{ author.get_full_name }}
+    {% else %}{{ author.username }}
+    {% endif %}</h1>
+  <h3>Всего постов: {{ author.posts.count }}</h3>
+  <h6>Всего подписок: {{ author.follower.count }}</h6>
+  <h6>Всего подписчиков: {{ author.following.count }}</h6>
+  <h6>Комментариев: {{ author.comments.count }}</h6>
+  {% if user != author and user.is_authenticated %}
+  {% if following %}
+    <a class="btn btn-lg btn-light" href="
+      {% url 'posts:profile_unfollow' author.username %}" role="button">
+      Отписаться</a>
+  {% else %}
+    <a class="btn btn-lg btn-primary" href="
+      {% url 'posts:profile_follow' author.username %}" role="button">
+      Подписаться</a>
+  {% endif %}
+  {% endif %}
+  {% for post in page_obj  %}
+    {% include "posts/includes/post_text.html" with hide_author=True %}
+    {% if not forloop.last %} <hr/> {% endif %}
+  {% endfor %}
+  {% include 'includes/paginator.html' %}
+</div> 
 {% endblock content %}

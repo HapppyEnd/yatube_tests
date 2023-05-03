@@ -1,6 +1,8 @@
 {% load user_filters %}
 <div class="card my-4">
-  <h5 class="card-header">{{ form.text.label }}</h5>
+  <h5 class="card-header">
+    <label title="{{ form.text.help_text }}">{{ form.text.label }}</label>
+  </h5>
   <div class="card-body">
     <form method="post" action="{% url 'posts:add_comment' post.id %}">
       {% csrf_token %}      
